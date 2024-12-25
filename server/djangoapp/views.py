@@ -113,3 +113,9 @@ def add_review(request):
         except Exception:
             return JsonResponse({"status": 401, "message": "Error in posting review"})
     return JsonResponse({"status": 403, "message": "Unauthorized"})
+
+def submit_review(request):
+    if request.method == 'POST':
+        # Handle the POST request
+        return JsonResponse({"status": "success", "message": "Review submitted successfully!"})
+    return JsonResponse({"status": "error", "message": "Invalid request method."})
