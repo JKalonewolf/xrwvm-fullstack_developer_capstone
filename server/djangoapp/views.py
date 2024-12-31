@@ -16,6 +16,7 @@ import requests
 
 # Constants
 
+
 # Logger
 logger = logging.getLogger(__name__)
 # Views
@@ -72,8 +73,6 @@ def get_cars(request):
     car_models = CarModel.objects.select_related('car_make')
     cars = [{"CarModel": cm.name, "CarMake": cm.car_make.name} for cm in car_models]
     return JsonResponse({"CarModels": cars})
-
-
 
 #Update the `get_dealerships` render list of dealerships all by default, particular state if state is passed
 def get_dealerships(request, state="All"):
