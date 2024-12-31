@@ -1,5 +1,6 @@
 # Uncomment the required imports before adding the code
 from .models import CarMake, CarModel
+from .restapis import get_request, analyze_review_sentiments, post_review
 from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.contrib.auth.models import User
@@ -14,36 +15,9 @@ import json
 import requests
 
 # Constants
-BASE_URL = "https://u2414104443-3030.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai"
 
 # Logger
 logger = logging.getLogger(__name__)
-
-# Utility Functions
-def get_request(endpoint, params=None):
-    url = f"{BASE_URL}{endpoint}"
-    try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"GET request failed: {e}")
-        return None
-
-def post_review(data):
-    url = f"{BASE_URL}/submitReview"
-    try:
-        response = requests.post(url, json=data)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        logger.error(f"POST request failed: {e}")
-        raise
-
-def analyze_review_sentiments(review_text):
-    # Dummy sentiment analysis logic
-    return {"sentiment": "positive"}
-
 # Views
 @csrf_exempt
 def login_user(request):
@@ -99,40 +73,45 @@ def get_cars(request):
     cars = [{"CarModel": cm.name, "CarMake": cm.car_make.name} for cm in car_models]
     return JsonResponse({"CarModels": cars})
 
-def get_dealerships(request, state="All"):
-    endpoint = "/fetchDealers" if state == "All" else f"/fetchDealers/{state}"
-    dealerships = get_request(endpoint)
-    return JsonResponse({"status": 200, "dealers": dealerships})
 
-def get_dealer_reviews(request, dealer_id):
-    if dealer_id:
-        endpoint = f"/fetchReviews/dealer/{dealer_id}"
-        reviews = get_request(endpoint)
-        if reviews is None:
-            return JsonResponse({"status": 500, "message": "Failed to fetch reviews"})
-        for review in reviews:
-            review['sentiment'] = analyze_review_sentiments(review['review'])['sentiment']
-        return JsonResponse({"status": 200, "reviews": reviews})
-    return JsonResponse({"status": 400, "message": "Bad Request"})
+
+#Update the `get_dealerships` render list of dealerships all by default, particular state if state is passed
+def get_dealerships(request, state="All"):
+    if(state == "All"):
+        endpoint = "/fetchDealers"
+    else:
+        endpoint = "/fetchDealers/"+state
+    dealerships = get_request(endpoint)
+    return JsonResponse({"status":200,"dealers":dealerships})
 
 def get_dealer_details(request, dealer_id):
-    if dealer_id:
-        dealership = get_request(f"/fetchDealer/{dealer_id}")
-        return JsonResponse({"status": 200, "dealer": dealership})
-    return JsonResponse({"status": 400, "message": "Bad Request"})
+    if(dealer_id):
+        endpoint = "/fetchDealer/"+str(dealer_id)
+        dealership = get_request(endpoint)
+        return JsonResponse({"status":200,"dealer":dealership})
+    else:
+        return JsonResponse({"status":400,"message":"Bad Request"})
+
+def get_dealer_reviews(request, dealer_id):
+    # if dealer id has been provided
+    if(dealer_id):
+        endpoint = "/fetchReviews/dealer/"+str(dealer_id)
+        reviews = get_request(endpoint)
+        for review_detail in reviews:
+            response = analyze_review_sentiments(review_detail['review'])
+            print(response)
+            review_detail['sentiment'] = response['sentiment']
+        return JsonResponse({"status":200,"reviews":reviews})
+    else:
+        return JsonResponse({"status":400,"message":"Bad Request"})        
 
 def add_review(request):
-    if not request.user.is_anonymous:
+    if(request.user.is_anonymous == False):
         data = json.loads(request.body)
         try:
-            post_review(data)
-            return JsonResponse({"status": 200})
-        except Exception:
-            return JsonResponse({"status": 401, "message": "Error in posting review"})
-    return JsonResponse({"status": 403, "message": "Unauthorized"})
-
-def submit_review(request):
-    if request.method == 'POST':
-        # Handle the POST request
-        return JsonResponse({"status": "success", "message": "Review submitted successfully!"})
-    return JsonResponse({"status": "error", "message": "Invalid request method."})
+            response = post_review(data)
+            return JsonResponse({"status":200})
+        except:
+            return JsonResponse({"status":401,"message":"Error in posting review"})
+    else:
+        return JsonResponse({"status":403,"message":"Unauthorized"})       
