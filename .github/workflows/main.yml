@@ -1,0 +1,41 @@
+lint_python:
+  runs-on: ubuntu-latest
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Python linting
+      run: flake8 server/**/*.py
+
+    - name: Complete message
+      run: echo "Linting for Python files completed successfully."
+
+lint_function_js:
+  runs-on: ubuntu-latest
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install JSHint
+      run: npm install -g jshint
+
+    - name: Run JavaScript linting
+      run: jshint database/**/*.js
+
+    - name: Complete message
+      run: echo "Linting for JavaScript files completed successfully."
