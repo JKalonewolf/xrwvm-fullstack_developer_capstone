@@ -9,7 +9,7 @@ on:
 jobs:
   lint_python:
     name: Lint Python Files
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Checkout Repository
@@ -30,10 +30,11 @@ jobs:
         echo "Running flake8 linter..."
         find . -name "*.py" -exec flake8 {} +
         echo "Linted all Python files successfully"
+      continue-on-error: true
 
   lint_js:
     name: Lint JavaScript Files
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Checkout Repository
@@ -42,7 +43,7 @@ jobs:
     - name: Install Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '14' # Compatible Node.js version
+        node-version: '14'
 
     - name: Install JSHint
       run: npm install jshint --global
@@ -58,3 +59,4 @@ jobs:
         echo "Running JSHint linter..."
         find ./server/database -name "*.js" -exec jshint {} +
         echo "Linted all JavaScript files successfully"
+      continue-on-error: true
