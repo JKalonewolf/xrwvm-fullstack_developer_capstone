@@ -42,10 +42,16 @@ jobs:
     - name: Install Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version: '14' # Compatible Node.js version
 
     - name: Install JSHint
       run: npm install jshint --global
+
+    - name: Configure JSHint
+      run: |
+        echo "{
+          \"esversion\": 5
+        }" > .jshintrc
 
     - name: Run Linter
       run: |
